@@ -1,0 +1,17 @@
+{
+  "name": "littlegiant/silverstripe-youtubefeed",
+  "type": "silverstripe-module",
+  "description": "YouTubeFeed requests videos from an authenticated YouTube 'My Uploads' feed and converts them into YouTubeVideo DataObjects.",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Oliver Shaw",
+      "email": "oliver.shaw@littlegiant.co.nz",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "google/apiclient": "1.1.4",
+    "silverstripe/framework": "~3.1"
+  }
+}

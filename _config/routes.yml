@@ -1,0 +1,7 @@
+---
+Name: 'youtubefeed-routes'
+After: 'framework/routes#coreroutes'
+---
+Director:
+  rules:
+    'youtube//$Action/$ID': 'YouTubeFeed'

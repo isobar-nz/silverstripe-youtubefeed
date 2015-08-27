@@ -1,0 +1,12 @@
+---
+Name: youtubefeed-extensions
+After: 'cms/*', 'framework/*'
+---
+
+SiteConfig:
+  extensions:
+    - 'YouTubeSiteConfigExtension'
+
+ContentController:
+  extensions:
+    - 'YouTubeFeedContentControllerExtension'
