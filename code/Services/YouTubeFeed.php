@@ -91,7 +91,7 @@ class YouTubeFeed extends Controller
             $response->setBody('Bad request');
         }
 
-        return $this->response;
+        return $response;
     }
 
     /**
