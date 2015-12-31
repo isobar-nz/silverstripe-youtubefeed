@@ -68,5 +68,4 @@ class YouTubeVideo extends DataObject
 
         return $video ? $video : false;
     }
-
 }

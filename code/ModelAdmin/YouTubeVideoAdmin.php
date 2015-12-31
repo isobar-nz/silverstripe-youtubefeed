@@ -21,5 +21,4 @@ class YouTubeVideoAdmin extends ModelAdmin
      * @var string
      */
     private static $menu_title = 'YouTube Videos';
-
 }

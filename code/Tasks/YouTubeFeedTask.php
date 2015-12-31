@@ -17,5 +17,4 @@ class YouTubeFeedTask extends CliController
         $service = new YouTubeFeed();
         $service->doAutoUpdate(true);
     }
-
 }
