@@ -16,5 +16,4 @@ class YouTubeFeedContentControllerExtension extends DataExtension
         $service = new YouTubeFeed();
         $service->doAutoUpdate();
     }
-
 }

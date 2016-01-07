@@ -35,8 +35,8 @@ class YouTubeSiteConfigExtension extends DataExtension
      */
     public function onBeforeWrite()
     {
-        if(isset($this->owner->getChangedFields()['YouTubeFeed_AppID']) || isset($this->owner->getChangedFields()['YouTubeFeed_AppSecret'])) {
-           $this->owner->YouTubeFeed_Token = null;
+        if (isset($this->owner->getChangedFields()['YouTubeFeed_AppID']) || isset($this->owner->getChangedFields()['YouTubeFeed_AppSecret'])) {
+            $this->owner->YouTubeFeed_Token = null;
         }
     }
 
@@ -102,5 +102,4 @@ class YouTubeSiteConfigExtension extends DataExtension
             }
         }
     }
-
 }

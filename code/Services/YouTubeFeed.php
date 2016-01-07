@@ -34,7 +34,7 @@ class YouTubeFeed extends Controller
      * Instantiate the Google API and feed provided config values
      * We require a long-lived access token
      */
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
 
@@ -47,16 +47,16 @@ class YouTubeFeed extends Controller
         $this->client->setAccessType('offline');
         $this->client->setApprovalPrompt('force');
 
-        if(!Director::is_cli()) {
+        if (!Director::is_cli()) {
             $this->client->setRedirectUri(Director::absoluteBaseURL() . 'youtube/authenticate');
         }
 
-        if($appID && $appSecret) {
+        if ($appID && $appSecret) {
             $this->client->setClientId($appID);
             $this->client->setClientSecret($appSecret);
             $this->service = new Google_Service_YouTube($this->client);
 
-            if($accessToken = $this->getConfigToken()) {
+            if ($accessToken = $this->getConfigToken()) {
                 $this->client->setAccessToken($accessToken);
             }
         }
@@ -76,7 +76,7 @@ class YouTubeFeed extends Controller
                 $response->setStatusCode('400');
                 $response->setBody('The state did not match');
             } else {
-                if($this->client) {
+                if ($this->client) {
                     $this->client->authenticate($code);
                     $token = $this->client->getAccessToken();
                     $this->setConfigToken($token);
@@ -126,7 +126,7 @@ class YouTubeFeed extends Controller
      */
     public function getRecentUploads($limit = 50)
     {
-        if($this->getIsAuthenticated()) {
+        if ($this->getIsAuthenticated()) {
             try {
                 // Call the channels.list method to retrieve information about the
                 // currently authenticated user's channel.
@@ -192,22 +192,22 @@ class YouTubeFeed extends Controller
         $videoFields['PlaylistPosition'] = $snippet['position'];
 
         // Get the highest res thumbnail available
-        if(isset($snippet['thumbnails']['maxres'])) {
+        if (isset($snippet['thumbnails']['maxres'])) {
             $videoFields['ThumbnailURL'] = $snippet['thumbnails']['maxres']['url'];
-        } elseif(isset($snippet['thumbnails']['standard'])) {
+        } elseif (isset($snippet['thumbnails']['standard'])) {
             $videoFields['ThumbnailURL'] = $snippet['thumbnails']['standard']['url'];
-        } elseif(isset($snippet['thumbnails']['high'])) {
+        } elseif (isset($snippet['thumbnails']['high'])) {
             $videoFields['ThumbnailURL'] = $snippet['thumbnails']['high']['url'];
-        } elseif(isset($snippet['thumbnails']['medium'])) {
+        } elseif (isset($snippet['thumbnails']['medium'])) {
             $videoFields['ThumbnailURL'] = $snippet['thumbnails']['medium']['url'];
-        } elseif(isset($snippet['thumbnails']['default'])) {
+        } elseif (isset($snippet['thumbnails']['default'])) {
             $videoFields['ThumbnailURL'] = $snippet['thumbnails']['default']['url'];
         }
 
         // Try retrieve existing YouTubeVideo by Youtube Video ID, create if it doesn't exist
         $videoObject = YouTubeVideo::getExisting($videoFields['VideoID']);
 
-        if(!$videoObject) {
+        if (!$videoObject) {
             $videoObject = new YouTubeVideo();
             $newYouTubeVideo = true;
         }
@@ -215,7 +215,7 @@ class YouTubeFeed extends Controller
         $videoObject->update($videoFields);
         $videoObject->write();
 
-        if(isset($newYouTubeVideo)) {
+        if (isset($newYouTubeVideo)) {
             // Allow decoration of YouTubeVideo with onAfterCreate(YouTubeVideo $videoObject) method
             $this->extend('onAfterCreate', $videoObject);
         }
@@ -266,19 +266,19 @@ class YouTubeFeed extends Controller
     {
         $siteConfig = SiteConfig::current_site_config();
 
-        if($force || $siteConfig->YouTubeFeed_AutoUpdate) {
+        if ($force || $siteConfig->YouTubeFeed_AutoUpdate) {
             $lastUpdated = $siteConfig->YouTubeFeed_LastSaved;
             $nextUpdateInterval = $siteConfig->YouTubeFeed_UpdateInterval;
             $nextUpdateIntervalUnit = $siteConfig->YouTubeFeed_UpdateIntervalUnit;
 
-            if($lastUpdated) {
+            if ($lastUpdated) {
                 // Assemble the time another update became required as per SiteConfig options
                 // YouTubeFeed_NextUpdateInterval & ..Unit
                 $minimumUpdateTime = strtotime($lastUpdated . ' +' . $nextUpdateInterval . ' ' . $nextUpdateIntervalUnit);
             }
 
             // If we haven't auto-updated before (fresh install), or an update is due, do update
-            if($force || !isset($minimumUpdateTime) || $minimumUpdateTime < time()) {
+            if ($force || !isset($minimumUpdateTime) || $minimumUpdateTime < time()) {
                 $this->getRecentUploads();
 
                 // Save the time the update was performed
@@ -286,7 +286,5 @@ class YouTubeFeed extends Controller
                 $siteConfig->write();
             }
         }
-
     }
-
 }
