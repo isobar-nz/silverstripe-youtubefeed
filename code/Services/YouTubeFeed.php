@@ -178,49 +178,63 @@ class YouTubeFeed extends Controller
     protected function processVideo($video)
     {
         $snippet = $video['snippet'];
+        $privacyStatus = $video['status']['privacyStatus'];
+        
+        if ($privacyStatus == 'public') {
 
-        $videoFields = array();
+            $videoFields = array();
 
-        // Map response data to columns in our YouTubeVideo table
-        $videoFields['VideoID'] = $snippet['resourceId']['videoId'];
-        $videoFields['Description'] = $snippet['description'];
-        $videoFields['Published'] = strtotime($snippet['publishedAt']);
-        $videoFields['Title'] = $snippet['title'];
-        $videoFields['ChannelTitle'] = $snippet['channelTitle'];
-        $videoFields['ChannelID'] = $snippet['channelId'];
-        $videoFields['PlaylistID'] = $snippet['playlistId'];
-        $videoFields['PlaylistPosition'] = $snippet['position'];
+            // Map response data to columns in our YouTubeVideo table
+            $videoFields['VideoID'] = $snippet['resourceId']['videoId'];
+            $videoFields['Description'] = $snippet['description'];
+            $videoFields['Published'] = strtotime($snippet['publishedAt']);
+            $videoFields['Title'] = $snippet['title'];
+            $videoFields['ChannelTitle'] = $snippet['channelTitle'];
+            $videoFields['ChannelID'] = $snippet['channelId'];
+            $videoFields['PlaylistID'] = $snippet['playlistId'];
+            $videoFields['PlaylistPosition'] = $snippet['position'];
 
-        // Get the highest res thumbnail available
-        if (isset($snippet['thumbnails']['maxres'])) {
-            $videoFields['ThumbnailURL'] = $snippet['thumbnails']['maxres']['url'];
-        } elseif (isset($snippet['thumbnails']['standard'])) {
-            $videoFields['ThumbnailURL'] = $snippet['thumbnails']['standard']['url'];
-        } elseif (isset($snippet['thumbnails']['high'])) {
-            $videoFields['ThumbnailURL'] = $snippet['thumbnails']['high']['url'];
-        } elseif (isset($snippet['thumbnails']['medium'])) {
-            $videoFields['ThumbnailURL'] = $snippet['thumbnails']['medium']['url'];
-        } elseif (isset($snippet['thumbnails']['default'])) {
-            $videoFields['ThumbnailURL'] = $snippet['thumbnails']['default']['url'];
+            // Get the highest res thumbnail available
+            if (isset($snippet['thumbnails']['maxres'])) {
+                $videoFields['ThumbnailURL'] = $snippet['thumbnails']['maxres']['url'];
+            } elseif (isset($snippet['thumbnails']['standard'])) {
+                $videoFields['ThumbnailURL'] = $snippet['thumbnails']['standard']['url'];
+            } elseif (isset($snippet['thumbnails']['high'])) {
+                $videoFields['ThumbnailURL'] = $snippet['thumbnails']['high']['url'];
+            } elseif (isset($snippet['thumbnails']['medium'])) {
+                $videoFields['ThumbnailURL'] = $snippet['thumbnails']['medium']['url'];
+            } elseif (isset($snippet['thumbnails']['default'])) {
+                $videoFields['ThumbnailURL'] = $snippet['thumbnails']['default']['url'];
+            }
+
+            // Try retrieve existing YouTubeVideo by Youtube Video ID, create if it doesn't exist
+            $videoObject = YouTubeVideo::getExisting($videoFields['VideoID']);
+
+            if (!$videoObject) {
+                $videoObject = new YouTubeVideo();
+                $newYouTubeVideo = true;
+            }
+
+            $videoObject->update($videoFields);
+            $videoObject->write();
+
+            if (isset($newYouTubeVideo)) {
+                // Allow decoration of YouTubeVideo with onAfterCreate(YouTubeVideo $videoObject) method
+                $this->extend('onAfterCreate', $videoObject);
+            }
+
+            return $videoObject;
+        
+        } else {
+            
+            $videoObject = YouTubeVideo::getExisting($snippet['resourceId']['videoId']);
+            if($videoObject && $videoObject->exists()) {
+                $videoObject->delete();
+            }
+            
         }
-
-        // Try retrieve existing YouTubeVideo by Youtube Video ID, create if it doesn't exist
-        $videoObject = YouTubeVideo::getExisting($videoFields['VideoID']);
-
-        if (!$videoObject) {
-            $videoObject = new YouTubeVideo();
-            $newYouTubeVideo = true;
-        }
-
-        $videoObject->update($videoFields);
-        $videoObject->write();
-
-        if (isset($newYouTubeVideo)) {
-            // Allow decoration of YouTubeVideo with onAfterCreate(YouTubeVideo $videoObject) method
-            $this->extend('onAfterCreate', $videoObject);
-        }
-
-        return $videoObject;
+        
+        return null;
     }
 
     /**
