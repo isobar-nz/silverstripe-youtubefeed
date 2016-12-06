@@ -14,7 +14,7 @@ class YouTubeSiteConfigExtension extends DataExtension
     private static $db = array(
         'YouTubeFeed_AppID' => 'Varchar(255)',
         'YouTubeFeed_AppSecret' => 'Varchar(255)',
-        'YouTubeFeed_Token' => 'Varchar(255)',
+        'YouTubeFeed_Token' => 'Text',
         'YouTubeFeed_LastSaved' => 'SS_Datetime',
         'YouTubeFeed_AutoUpdate' => 'Boolean',
         'YouTubeFeed_UpdateIntervalUnit' => "Enum('Minutes,Hours,Days', 'Minutes')",
