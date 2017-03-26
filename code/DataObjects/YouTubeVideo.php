@@ -4,6 +4,18 @@
  * Class YouTubeVideo
  *
  * Represents a video on YouTube
+ *
+ * @property string Title
+ * @property string VideoID
+ * @property string Description
+ * @property SS_Datetime Published
+ * @property string ChannelTitle
+ * @property string ChannelID
+ * @property string PlaylistID
+ * @property string ThumbnailURL
+ * @property int PlaylistPosition
+ * @@property  int ThumbnailID
+ * @method Image Thumbnail
  */
 class YouTubeVideo extends DataObject
 {
@@ -21,6 +33,10 @@ class YouTubeVideo extends DataObject
         'PlaylistID' => 'Varchar(255)',
         'ThumbnailURL' => 'Varchar(255)',
         'PlaylistPosition' => 'Int',
+    );
+
+    private static $has_one = array(
+        'Thumbnail' => 'Image'
     );
 
     /**

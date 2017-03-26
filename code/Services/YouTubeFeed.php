@@ -133,6 +133,7 @@ class YouTubeFeed extends Controller
                 $channelsResponse = $this->service->channels->listChannels('contentDetails', array(
                     'mine' => 'true',
                 ));
+
                 $uploads = array();
                 foreach ($channelsResponse['items'] as $channel) {
                     // Extract the unique playlist ID that identifies the list of videos
@@ -143,6 +144,7 @@ class YouTubeFeed extends Controller
                         'playlistId' => $uploadsListId,
                         'maxResults' => $limit
                     ));
+
 
                     foreach ($playlistItemsResponse['items'] as $playlistItem) {
                         $videoObject = $this->processVideo($playlistItem);
@@ -179,9 +181,9 @@ class YouTubeFeed extends Controller
     {
         $snippet = $video['snippet'];
         $privacyStatus = $video['status']['privacyStatus'];
-        
-        if ($privacyStatus == 'public') {
 
+        // if privacyStatus is set to public, or not privacy status is defined.
+        if ($privacyStatus == 'public' || is_null($privacyStatus)) {
             $videoFields = array();
 
             // Map response data to columns in our YouTubeVideo table
@@ -207,7 +209,7 @@ class YouTubeFeed extends Controller
                 $videoFields['ThumbnailURL'] = $snippet['thumbnails']['default']['url'];
             }
 
-            // Try retrieve existing YouTubeVideo by Youtube Video ID, create if it doesn't exist
+            /** @var YouTubeVideo $videoObject Try retrieve existing YouTubeVideo by Youtube Video ID, create if it doesn't exist */
             $videoObject = YouTubeVideo::getExisting($videoFields['VideoID']);
 
             if (!$videoObject) {
@@ -216,6 +218,13 @@ class YouTubeFeed extends Controller
             }
 
             $videoObject->update($videoFields);
+
+            if ($videoObject->ThumbnailURL != $videoFields['ThumbnailURL'] || !$videoObject->Thumbnail()) {
+                if ($thumbnail = $this->saveThumbnailFromUrl($videoFields['ThumbnailURL'], $videoFields['Title'], $videoFields['VideoID'] . '.' . $this->getFileExtension($videoFields['ThumbnailURL']))) {
+                    $videoObject->ThumbnailID = $thumbnail->ID;
+                }
+            }
+
             $videoObject->write();
 
             if (isset($newYouTubeVideo)) {
@@ -224,16 +233,16 @@ class YouTubeFeed extends Controller
             }
 
             return $videoObject;
-        
+
         } else {
-            
+
             $videoObject = YouTubeVideo::getExisting($snippet['resourceId']['videoId']);
             if($videoObject && $videoObject->exists()) {
                 $videoObject->delete();
             }
-            
+
         }
-        
+
         return null;
     }
 
@@ -300,5 +309,66 @@ class YouTubeFeed extends Controller
                 $siteConfig->write();
             }
         }
+    }
+
+    /**
+     * Returns the thumbnail directory, if it does not exist it will
+     * attempt to create it.
+     *
+     * @return string
+     */
+    public function getBaseThumbnailDir() {
+        $baseFolder = Director::baseFolder();
+        $assetsFolder = Controller::join_links($baseFolder, ASSETS_DIR);
+        $thumbnailsDir = Controller::join_links($assetsFolder, 'youtube-thumbnails');
+
+        if (!is_dir($thumbnailsDir) && !mkdir($thumbnailsDir, 0775)) {
+            user_error(
+                sprintf("Unable to create thumbnail storage directory: %s", $thumbnailsDir),
+                E_USER_ERROR
+            );
+        }
+
+        return $thumbnailsDir;
+    }
+
+    /**
+     * Get the relative thumbnail directory
+     *
+     * @return string
+     */
+    public function getThumbnailDir() {
+        return Controller::join_links(ASSETS_DIR, 'youtube-thumbnails');
+    }
+
+    /**
+     * @param $url
+     * @param $title
+     * @param $filename
+     * @return Image
+     */
+    public function saveThumbnailFromUrl($url, $title, $filename) {
+        $contents = file_get_contents($url);
+        $outputFilename = Controller::join_links($this->getBaseThumbnailDir(), $filename);
+        $localFilename = Controller::join_links($this->getThumbnailDir(), $filename);
+
+        file_put_contents($outputFilename, $contents);
+
+        $image = Image::create();
+        $image->Filename = $localFilename;
+        $image->Title = $title;
+        $image->write();
+
+        return $image;
+    }
+
+    /**
+     * Returns the extension from a filename. Used for thumbnail saving
+     *
+     * @param $filename
+     * @return mixed
+     */
+    public function getFileExtension($filename) {
+        return pathinfo(basename($filename), PATHINFO_EXTENSION);
     }
 }
